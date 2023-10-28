@@ -1,6 +1,7 @@
 import requests
 import urllib.parse
-
+import os
+import openai
 from lyricsgenius import Genius
 from datetime import datetime , timedelta
 from flask import Flask , redirect, request, jsonify, session, render_template
@@ -8,8 +9,9 @@ from flask import Flask , redirect, request, jsonify, session, render_template
 
 app = Flask(__name__)
 app.secret_key='a35k2k3kjg46897&'
+openai.api_key = "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"
 
-
+mood = ''
 @app.route('/')
 def index():
   return render_template("home.html")
@@ -17,6 +19,26 @@ def index():
 @app.route('/moodify')
 def moodify():
    return render_template("moodify.html")
+
+@app.route('/mood',methods =['POST'])
+def moods():
+  input=request.form['mood']
+  
+  if input.lower() =='happy':
+      mood= 'happy'
+  elif input.lower() =='sad':
+     mood='sad'
+  elif input.lower() == 'energetic':
+     mood ='dance'
+  elif input.lower()=='romantic':
+     mood= 'romance'
+  elif  input.lower()=='sleepy':
+     mood = 'sleep'
+  else:
+     mood = 'fuck'; 
+  os.environ['MOOD'] = mood
+  return redirect('/login')
+
 
 #SPOTIFY
 
@@ -71,7 +93,7 @@ def callback():
 def get_recommends():
   if 'access_token' not in session:
       return redirect('/login')
-   
+  mood = os.getenv("MOOD")
   if datetime.now().timestamp() > session['expires_at']:
       return redirect('/refresh-token')
    
@@ -79,8 +101,11 @@ def get_recommends():
       'Authorization' :  f"Bearer {session['access_token']}"
 
    }
+  
+  route = 'recommendations?limit=1&seed_genres='+mood
+  # log(route)
 
-  response = requests.get(API_BASE_URL + 'recommendations?limit=1&seed_genres=happy',headers=headers)
+  response = requests.get(API_BASE_URL + route ,headers=headers)
   track = response.json()
 
   stuff = {
@@ -92,6 +117,9 @@ def get_recommends():
   
   return render_template("index.html", data = stuff)
 
+
+  
+  
 
 @app.route('/refresh-token')
 def refresh_token():
@@ -112,32 +140,26 @@ def refresh_token():
       session['access_token'] = new_token_info['access_token']
       session['expires_at'] = datetime.now().timestamp() + new_token_info['expires_in']
 
-#lyrics
-
-token = "WnH5RtGSD-JQk9kxJwYySrwu6RpBkIBFDip5pKL21V285E22pxIt73JEI1RoTWWg"
-genius = Genius(token)
 
 
-@app.route('/lyrics')
-def lyrics():
-    return render_template('lyrics.html')
+@app.route('/summary')
+def sum():
+    return render_template('sum.html')
 
 @app.route('/generate_summary', methods=['POST'])
-def generate_summary():
-    song_name = request.form['song_name']
-    artist_name = request.form['artist_name']
+def input():
+  song= request.form['song_name']
+  artist = request.form['artist_name']
+  prompt = f'write a approx long summary for the song {song} by {artist}'
 
-    song = genius.search_song(song_name, artist_name)
-    lyrics = song.lyrics
-
-    r = requests.post(
-        "https://api.deepai.org/api/text-generator",
-        files={'text': lyrics},
-        headers={'api-key': 'quickstart-QUdJIGlzIGNvbWluZy4uLi4K'}
-    )
-
-    generated_summary = r.json()['output']
-    return render_template('result.html', generated_summary=generated_summary)
+  response = openai.Completion.create(
+    engine = "text-davinci-002",
+    prompt= prompt,
+    temperature = 0.4,
+    max_tokens=2048
+  )
+  generated_summary = response["choices"][0]["text"]
+  return render_template('result.html', generated_summary=generated_summary)
 
 
 app.run(debug=True)
