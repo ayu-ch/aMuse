@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Recommends</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+<body>
+  <h1 id="moodify"><strong>Moodify</strong></h1>
+  <hr>
+  <div>
+  <img src="{{data['image']}}">
+  </div>
+  <h2> Heres a song: <a href="{{data['link']}}"> {{data["song"]}}</a> by {{ data["artist"] }}</h2>
+  
+  
+  <script>
+    document.getElementById("moodify").addEventListener("click", redirect);
+    function redirect(){ window.location = "http://localhost:5000"; }
+  </script>
+  
+</body>
+</html>

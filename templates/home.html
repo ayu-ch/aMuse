@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Hub</title>
+  
+</head>
+<body>
+  <button id="moodify">Moodify</button>
+  <button id="lyrics">Lyrics</button>
+  
+</body>
+<script>
+  document.getElementById("moodify").addEventListener("click", moodify);
+  function moodify(){ window.location = "http://localhost:5000/moodify"; }
+
+  document.getElementById("lyrics").addEventListener("click", redirect);
+  function redirect(){ window.location = "http://localhost:5000/lyrics"; }
+</script>
+</html>
