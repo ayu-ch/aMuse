@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Keyboard Sound Player</title>
+</head>
+<body>
+    <h1>Keyboard Sound Player</h1>
+
+    <button id="startListeningButton">Start Listening</button>
+
+    <script>
+        let isListening = false;
+
+        // Function to start or stop listening
+        function toggleListening() {
+            if (!isListening) {
+                document.getElementById("startListeningButton").textContent = "Stop Listening";
+                isListening = true;
+                document.addEventListener("keydown", sendKeyPressed);
+            } else {
+                document.getElementById("startListeningButton").textContent = "Start Listening";
+                isListening = false;
+                document.removeEventListener("keydown", sendKeyPressed);
+            }
+        }
+
+        // Function to send the key pressed to the server
+        function sendKeyPressed(event) {
+            if (isListening) {
+                const key = event.key;
+                fetch('/play_sound', {
+                    method: 'POST',
+                    body: new URLSearchParams({ key: key }),
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                })
+                .then(response => response.text())
+                .then(data => console.log(data))
+                .catch(error => console.error('Error:', error));
+            }
+        }
+
+        // Add a click event listener to the button
+        document.getElementById("startListeningButton").addEventListener("click", toggleListening);
+    </script>
+</body>
+</html>

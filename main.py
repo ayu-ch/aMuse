@@ -5,20 +5,21 @@ import openai
 from lyricsgenius import Genius
 from datetime import datetime , timedelta
 from flask import Flask , redirect, request, jsonify, session, render_template
+import pygame
 
 
 app = Flask(__name__)
 app.secret_key='a35k2k3kjg46897&'
-openai.api_key = "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"
+openai.api_key = "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"
 
 mood = ''
 @app.route('/')
 def index():
-  return render_template("home.html")
+  return render_template("index-one.html")
 
 @app.route('/moodify')
 def moodify():
-   return render_template("moodify.html")
+   return render_template("blog-one.html")
 
 @app.route('/mood',methods =['POST'])
 def moods():
@@ -35,7 +36,7 @@ def moods():
   elif  input.lower()=='sleepy':
      mood = 'sleep'
   else:
-     mood = 'fuck'; 
+     mood = 'invalid'; 
   os.environ['MOOD'] = mood
   return redirect('/login')
 
@@ -114,8 +115,18 @@ def get_recommends():
     "link": track["tracks"][0]['external_urls']["spotify"],
     "image": track["tracks"][0]["album"]["images"][1]["url"]
   }
+  prompt = f'Give a short description of the song {stuff["song"]} by {stuff["artist"]}'
+
+  response = openai.Completion.create(
+    engine = "text-davinci-002",
+    prompt= prompt,
+    temperature = 0.4,
+    max_tokens=64
+  )
+
   
-  return render_template("index.html", data = stuff)
+  generated_summary = response["choices"][0]["text"]
+  return render_template("blog-single.html", data = stuff,generated_summary=generated_summary)
 
 
   
@@ -144,22 +155,111 @@ def refresh_token():
 
 @app.route('/summary')
 def sum():
-    return render_template('sum.html')
+    return render_template('blog-two.html')
 
 @app.route('/generate_summary', methods=['POST'])
 def input():
   song= request.form['song_name']
   artist = request.form['artist_name']
-  prompt = f'write a approx long summary for the song {song} by {artist}'
+  
+  prompt1 = f'write the summary of the song {song} by {artist}'
 
-  response = openai.Completion.create(
+  response1 = openai.Completion.create(
     engine = "text-davinci-002",
-    prompt= prompt,
-    temperature = 0.4,
+    prompt= prompt1,
+    temperature = 1,
     max_tokens=2048
   )
-  generated_summary = response["choices"][0]["text"]
-  return render_template('result.html', generated_summary=generated_summary)
+  
+  prompt2 = f'Give the lyrics of the song {song} by {artist}'
+
+  response2 = openai.Completion.create(
+    engine = "text-davinci-002",
+    prompt= prompt2,
+    temperature = 0.4,
+    max_tokens=64
+  )
+  
+
+  generated_summary1 = response1["choices"][0]["text"]
+  generated_summary2 = response2["choices"][0]["text"]
+
+  
+  return render_template('summary.html', generated_summary1=generated_summary1, generated_summary2= generated_summary2)
+
+
+pygame.init()
+key_to_sound = {
+
+    '1': './static/Beat 1.wav',
+    '2': './static/Beat 2.wav',
+    '3': './static/Beat 3.wav',
+    '4': './static/Beat 4.wav',
+    '5': './static/Beat 5.wav',
+    '6': './static/Beat 6.wav',
+    '7': './static/Beat 7.wav',
+    '8': './static/Beat 8.wav',
+    '9': './static/Beat 9.wav',
+    '0': './static/Beat 10.wav',
+    'q': './static/Bass 1.wav',
+    'w': './static/Bass 2.wav',
+    'a': './static/Bass 3.wav',
+    's': './static/Bass 4.wav',
+    'z': './static/Syn 1.wav',
+    'x': './static/Syn 2.wav',
+    'c': './static/Syn 3.wav',
+    'v': './static/Syn 4.wav',
+    'b': './static/Syn 5.wav',
+    'n': './static/Syn 6.wav',
+    'm': './static/Syn 7.wav',
+    'p': './static/animals.wav',
+    'o': './static/blinding lights.wav',
+    'l': './static/do i wanna know.wav',
+    'k': './static/roses.wav',
+    'i': './static/jack.wav',
+    'j': './static/panda.wav',
+    'u': './static/cradles.wav',
+    'h': './static/bella-ciao.wav'
+
+
+
+
+}
+
+sounds = {key: pygame.mixer.Sound(sound_file) for key, sound_file in key_to_sound.items()}
+sound_status = {key: False for key in key_to_sound}
+
+@app.route('/keydm')
+def hello():
+    return render_template('songs-one.html')
+
+@app.route('/play_sound', methods=['POST'])
+def play_sound():
+    key = request.form['key']
+    if key == " ":  # Check if the space key is pressed
+        stop_all_sounds()
+        return "All sounds stopped."
+    elif key in key_to_sound:
+        if sound_status[key]:
+            sounds[key].stop()
+            sound_status[key] = False
+            return "Sound stopped."
+        else:
+            sounds[key].play(loops=-1)
+            sound_status[key] = True
+            return "Sound played."
+    else:
+        return "Key not mapped to a sound."
+
+def stop_all_sounds():
+    for key in key_to_sound:
+        if sound_status[key]:
+            sounds[key].stop()
+            sound_status[key] = False
+
+@app.route('/about')
+def fun():
+   return render_template("about-one.html")
 
 
 app.run(debug=True)

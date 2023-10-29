@@ -1,0 +1,24 @@
+body{
+  background-color: rgb(236, 227, 206);
+  text-align: center;
+  color: rgb(115, 144, 114);
+  }
+  hr{
+    color: rgb(58, 77, 57);
+    border: 3px solid;
+
+
+  }
+  #moodify{
+    color: rgb(79, 111, 82);
+  }
+
+  #moodify:hover{
+      cursor: pointer;
+      color: rgb(58, 77, 57);
+      transition: 0,5s;
+  }  
+
+  img{
+    border-radius: 20px;
+  }
