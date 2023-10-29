@@ -261,5 +261,9 @@ def stop_all_sounds():
 def fun():
    return render_template("about-one.html")
 
+@app.route('/quizzical')
+def quizzicaly():
+   return render_template("quizzical.html")
+
 
 app.run(debug=True)
